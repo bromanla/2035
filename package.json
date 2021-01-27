@@ -1,0 +1,28 @@
+{
+  "name": "2035",
+  "version": "1.0.0",
+  "description": "University project management",
+  "main": "app.js",
+  "author": "bromanla <bromanla.json@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-jwt": "^6.0.0",
+    "express-rate-limit": "^5.2.3",
+    "express-validator": "^6.9.2",
+    "helmet": "^4.3.1",
+    "joi": "^17.3.0",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.21.16",
+    "log4js": "^6.3.0",
+    "log4js-telegram-appender": "^1.0.2",
+    "pg": "^8.5.1",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.10"
+  }
+}
