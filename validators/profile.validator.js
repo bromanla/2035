@@ -7,20 +7,20 @@ class ProfileValidator extends Validator {
     constructor () {
         super();
 
-        this._id = (req) => param('id')
+        this._id = (req) => param('id', 'Invalid id')
             .exists()
             .isNumeric({
                 no_symbols: true
             })
             .isInt({
-                min: 0,
+                min: 1,
                 allow_leading_zeroes: false
             })
             .run(req)
     }
 
     /* Methods */
-    profile = async (req, res, next) => {
+    byId = async (req, res, next) => {
         await this.validationQueue(req, res, next, [this._id])
     }
 }

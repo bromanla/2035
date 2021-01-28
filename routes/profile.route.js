@@ -3,7 +3,7 @@ const profileController = require('../controllers/profile.controller');
 const profileValidator = require('../validators/profile.validator');
 
 router.get('/', profileController.root)
-router.get('/:id', profileValidator.profile, profileController.profile)
+router.get('/:id', profileValidator.byId, profileController.byId)
 
 module.exports = {
     path: '/profile',

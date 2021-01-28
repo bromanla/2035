@@ -50,15 +50,15 @@ class ProfileController {
         await this.profileRouter(res, jwt.role, jwt.id);
     }
 
-    profile = async (req, res) => {
+    byId = async (req, res) => {
         const { id } = req.params;
 
-        const [ row ] = await knex('users')
+        const [ user ] = await knex('users')
             .where('id', id)
             .select('role')
 
-        if (!row)
-            return res.status(404).json({error: 'User is not found'})
+        if (!user)
+            return res.status(404).json({error: {msg: 'User not found', value: id}})
 
         await this.profileRouter(res, row.role, id);
     }
