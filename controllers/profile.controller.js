@@ -9,16 +9,16 @@ class ProfileController {
         * @param {*} id - ID of the required user
         **/
         this.profileRouter = async (res, role, id) => {
-            let row
+            let row;
 
             switch (role) {
                 case 0:
                     // Guest
                     break;
-                case 1:
+                case 'student':
                     [ row ] = await this.getProfileStudent(id)
                     break;
-                case 2:
+                case 'curator':
                     [ row ] = await this.getProfileCurator(id)
                     break;
                 case 3:
@@ -30,12 +30,12 @@ class ProfileController {
         }
 
         this.getProfileCurator = async (id) => knex('users')
-            .leftJoin('curators', 'users.id', 'user_id')
+            .leftJoin('curators', 'curators.user_id', 'users.id')
             .select('role', 'name', 'surname', 'patronymic', 'position')
-            .where('users.id', id)
+            .where('user_id', id)
 
         this.getProfileStudent = async (id) => knex('users')
-            .leftJoin('students', 'users.id', 'user_id')
+            .leftJoin('students', 'students.user_id', 'users.id')
             .leftJoin('groups', 'group_id', 'groups.id')
             .leftJoin('faculties', 'faculty_id', 'faculties.id')
             .leftJoin('universities', 'university_id', 'universities.id')
@@ -60,7 +60,7 @@ class ProfileController {
         if (!user)
             return res.status(404).json({error: {msg: 'User not found', value: id}})
 
-        await this.profileRouter(res, row.role, id);
+        await this.profileRouter(res, user.role, id);
     }
 }
 

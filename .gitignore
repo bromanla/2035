@@ -3,3 +3,6 @@ nodemon.json
 node_modules
 notes.js
 desktop.ini
+sql
+sql.js
+uploads

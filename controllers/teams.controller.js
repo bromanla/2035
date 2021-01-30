@@ -3,24 +3,22 @@ const knex = require('../db');
 class TeamsController {
     constructor () {
         this.getTeam = async (id) => knex('teams')
-            .leftJoin(knex.ref('users').as('curators_tem'), 'teams.сurator_id', 'curators_tem.id')
-            .leftJoin('curators', 'curators_tem.id', 'curators.user_id')
-            .leftJoin(knex.ref('users').as('students_tem'), 'teams.leader_id', 'students_tem.id')
-            .leftJoin('students', 'students_tem.id', 'students.user_id')
-            .select({
-                team_id: 'teams.id',
-                team_name: 'teams.team_name',
-                team_description: 'teams.team_description',
-                leader_id: 'students.user_id',
-                leader_name: 'students.name',
-                leader_surname: 'students.surname',
-                leader_patronymic: 'students.patronymic',
-                curator_id: 'curators.user_id',
-                curator_name: 'curators.name',
-                curator_surname: 'curators.surname',
-                curator_patronymic: 'curators.patronymic'
-            })
+            .leftJoin('teams_members', 'teams_members.team_id', 'teams.id')
+            .leftJoin('users', 'users.id', 'teams_members.user_id')
             .where('teams.id', id)
+            .select([
+                knex.ref('teams.id').as('team_id'),
+                'team_name',
+                'team_description',
+                'customer',
+                'team_role',
+                'role',
+                knex.ref('users.id').as('user_id'),
+                'name',
+                'surname',
+                'patronymic',
+                'small_photo'
+            ])
     }
 
     /* Methods */
@@ -48,12 +46,24 @@ class TeamsController {
 
     byId = async (req, res) => {
         const { id } = req.params;
-        const [ team ] = await this.getTeam(id)
+        const rows = await this.getTeam(id)
 
-        if (!team)
+        if (!rows.length)
             return res.status(404).json({error: {msg: 'Team not found', value: id}})
 
-        res.json(team)
+        const [ { team_id, team_name, team_description, customer } ] = rows;
+
+        const members = rows.map(({user_id, name, surname, patronymic, team_role, small_photo}) => ({id: user_id, name, surname, patronymic, team_role, small_photo}))
+
+        res.json({
+            team: {
+                team_id,
+                team_name,
+                team_description,
+                customer
+            },
+            members
+        })
     }
 }
 
