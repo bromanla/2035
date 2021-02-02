@@ -12,7 +12,7 @@ class ProfileController {
             let row;
 
             switch (role) {
-                case 0:
+                case 'guest':
                     // Guest
                     break;
                 case 'student':
@@ -21,7 +21,7 @@ class ProfileController {
                 case 'curator':
                     [ row ] = await this.getProfileCurator(id)
                     break;
-                case 3:
+                case 'moderator':
                     // Moderator
                     break;
             }
@@ -31,7 +31,15 @@ class ProfileController {
 
         this.getProfileCurator = async (id) => knex('users')
             .leftJoin('curators', 'curators.user_id', 'users.id')
-            .select('role', 'name', 'surname', 'patronymic', 'position')
+            .select(
+                'users.id',
+                'name',
+                'surname',
+                'patronymic',
+                'role',
+                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/'||small_photo`)).as('small_photo'),
+                'position'
+            )
             .where('user_id', id)
 
         this.getProfileStudent = async (id) => knex('users')
@@ -39,7 +47,19 @@ class ProfileController {
             .leftJoin('groups', 'group_id', 'groups.id')
             .leftJoin('faculties', 'faculty_id', 'faculties.id')
             .leftJoin('universities', 'university_id', 'universities.id')
-            .select('role', 'name', 'surname', 'patronymic', 'course', 'group_name', 'faculty_name', 'university_name', 'university_briefly')
+            .select(
+                'users.id',
+                'name',
+                'surname',
+                'patronymic',
+                'role',
+                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/small_photo/'||small_photo`)).as('small_photo'),
+                'course',
+                'group_name',
+                'faculty_name',
+                'university_name',
+                'university_briefly'
+            )
             .where('users.id', id)
     }
 

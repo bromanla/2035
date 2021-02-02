@@ -10,6 +10,7 @@ class TeamsController {
                 knex.ref('teams.id').as('team_id'),
                 'team_name',
                 'team_description',
+                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/team_icon/'||team_icon`)).as('team_icon'),
                 'customer',
                 'team_role',
                 'role',
@@ -17,7 +18,7 @@ class TeamsController {
                 'name',
                 'surname',
                 'patronymic',
-                'small_photo'
+                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/small_photo/'||small_photo`)).as('small_photo'),
             ])
     }
 
@@ -27,7 +28,7 @@ class TeamsController {
         const archive = req.query.archive ?? false;
 
         const teams = await knex('teams')
-            .select('id', 'team_name',)
+            .select('id', 'team_name', 'team_icon')
             .orderBy('team_name', 'asc')
             .offset((page - 1) * process.env.TEAMS_PER_PAGE)
             .limit(process.env.TEAMS_PER_PAGE)
@@ -51,7 +52,7 @@ class TeamsController {
         if (!rows.length)
             return res.status(404).json({error: {msg: 'Team not found', value: id}})
 
-        const [ { team_id, team_name, team_description, customer } ] = rows;
+        const [ { team_id, team_name, team_description, customer, team_icon } ] = rows;
 
         const members = rows.map(({user_id, name, surname, patronymic, team_role, small_photo}) => ({id: user_id, name, surname, patronymic, team_role, small_photo}))
 
@@ -60,6 +61,7 @@ class TeamsController {
                 team_id,
                 team_name,
                 team_description,
+                team_icon,
                 customer
             },
             members
