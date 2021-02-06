@@ -7,10 +7,8 @@ class AuthController {
     // Authorization users
     login = async (req, res) => {
         const { user } = req;
-        const agent = req.headers['user-agent'] || 'Undefined';
-        let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress
 
-        res.json(await this.issueToken(user, agent, ip))
+        await this.issueToken(req, res, user)
     }
 
     // Get a new tokens
@@ -21,10 +19,7 @@ class AuthController {
             .where('id', user.token_id)
             .del()
 
-        const agent = req.headers['user-agent'] || 'Undefined';
-        let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress
-
-        res.json(await this.issueToken(user, agent, ip))
+        await this.issueToken(req, res, user)
     }
 
     // Logout all devices
@@ -41,7 +36,10 @@ class AuthController {
         })
     }
 
-    issueToken = async (user, agent, ip) => {
+    issueToken = async (req, res, user) => {
+        const agent = req.headers['user-agent'] || 'Undefined';
+        const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress
+
         const user_id = user.id;
         const token = uuid();
         const expires_in = Date.now() + 1000 * 60 * 60 * 24 * 90; // 90 days in milliseconds
@@ -53,7 +51,7 @@ class AuthController {
             role: user.role
         }
 
-        return {
+        res.json({
             jwt: jwt.sign(
                 payload,
                 process.env.JWT_SECRET,
@@ -62,7 +60,7 @@ class AuthController {
                     algorithm: process.env.JWT_ALGORITHM
                 }),
             token: token
-        }
+        })
     }
 }
 

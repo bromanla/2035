@@ -1,4 +1,5 @@
 const knex = require('../db');
+const { knex_small_photo } = require('./entities')
 
 class ProfileController {
     constructor () {
@@ -31,15 +32,7 @@ class ProfileController {
 
         this.getProfileCurator = async (id) => knex('users')
             .leftJoin('curators', 'curators.user_id', 'users.id')
-            .select(
-                'users.id',
-                'name',
-                'surname',
-                'patronymic',
-                'role',
-                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/'||small_photo`)).as('small_photo'),
-                'position'
-            )
+            .select('users.id', 'name', 'surname', 'patronymic', 'role', knex_small_photo, 'position')
             .where('user_id', id)
 
         this.getProfileStudent = async (id) => knex('users')
@@ -53,7 +46,7 @@ class ProfileController {
                 'surname',
                 'patronymic',
                 'role',
-                knex.ref(knex.raw(`'${process.env.DOMAIN}/uploads/small_photo/'||small_photo`)).as('small_photo'),
+                knex_small_photo,
                 'course',
                 'group_name',
                 'faculty_name',

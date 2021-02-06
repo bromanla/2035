@@ -1,16 +1,16 @@
 const knex = require('../db');
 
-class AgentController {
+class AgentsController {
     /* Methods */
     root = async (req, res) => {
         const { jwt } = req;
 
         const rows = await knex('tokens')
             .where('user_id', jwt.id)
-            .select('id', 'agent')
+            .select('id', 'agent', 'ip')
 
         res.json(rows);
     }
 }
 
-module.exports = new AgentController()
+module.exports = new AgentsController()

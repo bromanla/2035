@@ -1,22 +1,12 @@
-const
-    { param, query } = require('express-validator'),
-    Validator = require('./validator'),
-    knex = require('../db');
+const { query } = require('express-validator');
+const Validator = require('./validator')
+const { _id } = require('./entities')
 
 class TeamsValidator extends Validator {
     constructor () {
         super();
 
-        this._id = (req) => param('id')
-            .exists()
-            .isNumeric({
-                no_symbols: true
-            })
-            .isInt({
-                min: 1,
-                allow_leading_zeroes: false
-            })
-            .run(req)
+        this._id = _id;
 
         this._page = (req) => query('page')
             .optional()

@@ -1,9 +1,9 @@
 const router = require('express').Router();
-const agentController = require('../controllers/agent.controller');
+const agentController = require('../controllers/agents.controller');
 
 router.get('/', agentController.root)
 
 module.exports = {
-    path: '/agent',
+    path: '/agents',
     router
 }

@@ -1,11 +1,11 @@
 const Validator = require('./validator')
 const { _id } = require('./entities')
 
-class ProfileValidator extends Validator {
+class EventsValidator extends Validator {
     constructor () {
         super();
 
-        this._id = _id;
+        this._id = _id
     }
 
     /* Methods */
@@ -14,4 +14,4 @@ class ProfileValidator extends Validator {
     }
 }
 
-module.exports = new ProfileValidator()
+module.exports = new EventsValidator()
