@@ -1,3 +1,5 @@
+const multer = require('multer')
+
 module.exports = [
     // Page not Found
     (req, res) => {
@@ -14,7 +16,7 @@ module.exports = [
 
         switch (err.name) {
             case 'SyntaxError':
-                code = 401;
+                code = 401
                 message = 'Unexpected string in JSON'
                 break;
             case 'UnauthorizedError':

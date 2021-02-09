@@ -1,7 +1,7 @@
 const Validator = require('./validator')
-const { _id } = require('./entities')
+const { _id } = require('./entities');
 
-class ProfileValidator extends Validator {
+class UsersValidator extends Validator {
     constructor () {
         super();
 
@@ -14,4 +14,4 @@ class ProfileValidator extends Validator {
     }
 }
 
-module.exports = new ProfileValidator()
+module.exports = new UsersValidator()

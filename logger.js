@@ -28,7 +28,7 @@ const appenders = {
 const categories = {
     default: {
         appenders: ['stdout'],
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+        level: 'trace'
     }
 }
 

@@ -18,7 +18,7 @@ class Validator {
             next()
         } catch (errors) {
             const [ error ] = errors;
-            logger.debug(error)
+            logger.trace(error)
 
             res.status(422).json({ error })
         }
