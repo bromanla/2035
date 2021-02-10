@@ -3,6 +3,7 @@ const { knex_small_photo } = require('./entities')
 const sharp = require('sharp');
 const { v4: uuid } = require('uuid');
 const path = require('path');
+const bcrypt = require('bcryptjs')
 
 const multer = require('multer')({
     limits: { fileSize: 1024 * 1024 * 10 },
@@ -130,17 +131,60 @@ class UsersController {
                     })
                     .toFile(`uploads/small_photo/${fileName}`)
 
+                // List of files
+                const [ photo_id ] = await knex('upload_queue')
+                    .insert({
+                        type: 'small_photo',
+                        file_name: fileName,
+                        uploaded_by: id
+                    })
+                    .returning('id')
+
                 logger.debug(`Moderator #${id} uploaded an image (${fileName})`)
 
                 res.json({
                     details: {
-                        url: `${process.env.DOMAIN}/uploads/small_photo/${fileName}`
+                        url: `${process.env.DOMAIN}/uploads/small_photo/${fileName}`,
+                        photo_id
                     }
                 })
             } catch (err) {
                 res.status(400).json({error: {msg: err.message}})
             }
         })
+    }
+
+    create = async (req, res, next) => {
+        const { req_id, role: req_role } = req.jwt;
+
+        if (req_role !== 'moderator')
+            return res.status(403).json({ error: {msg: 'No access rights to the method'}})
+
+        const { username, password, role, name, surname, patronymic, small_photo_id, small_photo = 'default.jpg' } = req.body;
+
+        knex('users')
+            .insert({
+                username,
+                password: bcrypt.hashSync(password, 10),
+                role,
+                name,
+                surname,
+                patronymic,
+                small_photo
+            })
+            .returning('id')
+            .then(async([id]) => {
+                if (small_photo_id)
+                    await knex('upload_queue').where('id', small_photo_id).del()
+
+                logger.debug(`Moderator #${req_id} created user (${id})`)
+
+                res.json({details: {id}})
+            })
+            .catch(err => {
+                logger.error(`Error on created user ${username}`)
+                next(err)
+            })
     }
 }
 
