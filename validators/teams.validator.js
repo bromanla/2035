@@ -26,7 +26,7 @@ class TeamsValidator extends Validator {
     }
 
     /* Methods */
-    root = async (req, res, next) => {
+    list = async (req, res, next) => {
         await this.validationQueue(req, res, next, [this._page, this._archive])
     }
 

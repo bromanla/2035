@@ -1,7 +1,5 @@
 const  { body } = require('express-validator');
-
-const knex = require('../db');
-const Validator = require('./validator')
+const Validator = require('./validator');
 const { _id } = require('./entities');
 
 class UsersValidator extends Validator {
@@ -11,44 +9,22 @@ class UsersValidator extends Validator {
         this._id = _id;
 
         this._username = (req) => body('username')
-            .exists()
-            .withMessage('Username is required')
-            .bail()
-            .isAlphanumeric('en-US')
-            .withMessage('Unacceptable symbols')
-            .bail()
-            .isLength({min: 4, max: 16})
-            .withMessage('Invalid length')
-            .bail()
-            .custom(async username => {
-                const [ { count }  ] = await knex('users')
-                    .count()
-                    .where('username', username)
-
-                if (count != 0)
-                    throw 'User already exists'
-            })
+            .exists().withMessage('Username is required').bail()
+            .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
+            .isLength({min: 4, max: 16}).withMessage('Invalid length').bail()
             .run(req)
 
         this._password = (req) => body('password')
-            .exists()
-            .withMessage('Password is required')
-            .bail()
-            .isString()
-            .withMessage('Unacceptable symbols')
-            .bail()
-            .isLength({min: 4, max: 32})
-            .withMessage('Invalid length')
+            .exists().withMessage('Password is required').bail()
+            .isString().withMessage('Unacceptable symbols').bail()
+            .isLength({min: 4, max: 32}).withMessage('Invalid length')
             .run(req)
 
-
         this._role = (req) => body('role')
-            .exists()
-            .withMessage('Role is required')
-            .bail()
+            .exists().withMessage('Role is required').bail()
             .custom(async role => {
                 if (!['student', 'curator', 'guest', 'moderator'].includes(role))
-                    throw 'Incorrect value'
+                    throw 'Role doesn\'t exist'
             })
             .run(req)
 
@@ -58,7 +34,7 @@ class UsersValidator extends Validator {
             .isLength({max: 32}).withMessage('Invalid length')
             .run(req)
 
-        this._small_photo = (req) => body('small_photo_id')
+        this._photo_id = (req) => body('photo_id')
             .optional()
             .isNumeric({
                 no_symbols: true
@@ -66,14 +42,6 @@ class UsersValidator extends Validator {
             .isInt({
                 min: 1,
                 allow_leading_zeroes: false
-            })
-            .custom(async (small_photo_id) => {
-                const [ small_photo ] = await knex('upload_queue').select().where('id', small_photo_id)
-
-                if (!small_photo)
-                    throw 'small_photo not found in db'
-
-                req.body.small_photo = small_photo.file_name
             })
             .run(req)
     }
@@ -91,7 +59,7 @@ class UsersValidator extends Validator {
             this._FIO('name'),
             this._FIO('surname'),
             this._FIO('patronymic'),
-            this._small_photo
+            this._photo_id
         ])
     }
 }

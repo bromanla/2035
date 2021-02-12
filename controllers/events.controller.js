@@ -3,7 +3,7 @@ const { knex_small_photo, knex_team_icon } = require('./entities');
 
 class EventsController {
     /* Methods */
-    root = async (req, res) => {
+    list = async (req, res) => {
         const events = await knex('events')
             .select(
                 'id',
@@ -36,11 +36,7 @@ class EventsController {
             .select('users.id', 'role', 'name', 'surname', 'patronymic', knex_small_photo)
             .where('event_id', id)
 
-        res.json({
-            event,
-            teams,
-            guest
-        })
+        res.json({ event, teams, guest })
     }
 }
 

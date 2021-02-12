@@ -1,8 +1,8 @@
 const knex = require('../db');
 
-class AgentsController {
+class SettingsController {
     /* Methods */
-    root = async (req, res) => {
+    agents = async (req, res) => {
         const { jwt } = req;
 
         const rows = await knex('tokens')
@@ -13,4 +13,4 @@ class AgentsController {
     }
 }
 
-module.exports = new AgentsController()
+module.exports = new SettingsController()

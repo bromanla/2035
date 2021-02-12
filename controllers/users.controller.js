@@ -1,21 +1,6 @@
+const bcrypt = require('bcryptjs');
 const knex = require('../db');
-const { knex_small_photo } = require('./entities')
-const sharp = require('sharp');
-const { v4: uuid } = require('uuid');
-const path = require('path');
-const bcrypt = require('bcryptjs')
-
-const multer = require('multer')({
-    limits: { fileSize: 1024 * 1024 * 10 },
-    fileFilter: (req, file, callback) => {
-        const extension = path.extname(file.originalname)
-
-        if (['.jpg', 'jpeg', '.png', '.HEIC'].includes(extension))
-            return callback(null, true)
-
-        callback(new Error('Only images are allowed'))
-    }
-}).single('photo');
+const { knex_small_photo } = require('./entities');
 
 class UsersController {
     constructor () {
@@ -56,19 +41,7 @@ class UsersController {
             .leftJoin('groups', 'group_id', 'groups.id')
             .leftJoin('faculties', 'faculty_id', 'faculties.id')
             .leftJoin('universities', 'university_id', 'universities.id')
-            .select(
-                'users.id',
-                'name',
-                'surname',
-                'patronymic',
-                'role',
-                knex_small_photo,
-                'course',
-                'group_name',
-                'faculty_name',
-                'university_name',
-                'university_briefly'
-            )
+            .select('users.id', 'name', 'surname', 'patronymic', 'role', knex_small_photo, 'course', 'group_name', 'faculty_name', 'university_name', 'university_briefly')
             .where('users.id', id)
     }
 
@@ -92,77 +65,30 @@ class UsersController {
         await this.profileRouter(res, user.role, id);
     }
 
-    uploadPhoto = async (req, res) => {
-        const { id, role } = req.jwt;
+    create = async (req, res) => {
+        const { jwt } = req;
 
-        if (role !== 'moderator')
+        if (jwt.role !== 'moderator')
             return res.status(403).json({ error: {msg: 'No access rights to the method'}})
 
-        /* Uploading a photo */
-        multer(req, res, async (err) => {
-            if (err) {
-                return res.status(400).send({error: {msg: err.message}})
-            }
+        const { username, password, role, name, surname, patronymic, photo_id} = req.body
 
-            const image = req.file;
+        let small_photo = 'default.jpg'
 
-            try {
-                /* Cropping and compressing */
-                const { width, height } = await sharp(image.buffer).metadata()
+        if (photo_id) {
+            const [ photo ] = await knex('upload_queue').select().where('id', photo_id)
 
-                const fileName = uuid() + '.jpg'
+            if (!photo)
+                return res.status(422).json({error : {msg: 'Photo not found in db', value: photo_id}})
 
-                // Crop definition
-                const size = (width < 512) || (height < 512)
-                    ? width < height
-                    ? width
-                    : height
-                    : 512
+            await knex('upload_queue')
+                .where('id', photo.id)
+                .del()
 
-                await sharp(image.buffer)
-                    .resize({
-                        width: size,
-                        height: size,
-                        fit: sharp.fit.cover,
-                        position: sharp.strategy.attention
-                    })
-                    .jpeg({
-                        quality: 80
-                    })
-                    .toFile(`uploads/small_photo/${fileName}`)
+            small_photo = photo.file_name
+        }
 
-                // List of files
-                const [ photo_id ] = await knex('upload_queue')
-                    .insert({
-                        type: 'small_photo',
-                        file_name: fileName,
-                        uploaded_by: id
-                    })
-                    .returning('id')
-
-                logger.debug(`Moderator #${id} uploaded an image (${fileName})`)
-
-                res.json({
-                    details: {
-                        url: `${process.env.DOMAIN}/uploads/small_photo/${fileName}`,
-                        photo_id
-                    }
-                })
-            } catch (err) {
-                res.status(400).json({error: {msg: err.message}})
-            }
-        })
-    }
-
-    create = async (req, res, next) => {
-        const { req_id, role: req_role } = req.jwt;
-
-        if (req_role !== 'moderator')
-            return res.status(403).json({ error: {msg: 'No access rights to the method'}})
-
-        const { username, password, role, name, surname, patronymic, small_photo_id, small_photo = 'default.jpg' } = req.body;
-
-        knex('users')
+        const [ id ] = await knex('users')
             .insert({
                 username,
                 password: bcrypt.hashSync(password, 10),
@@ -173,18 +99,10 @@ class UsersController {
                 small_photo
             })
             .returning('id')
-            .then(async([id]) => {
-                if (small_photo_id)
-                    await knex('upload_queue').where('id', small_photo_id).del()
 
-                logger.debug(`Moderator #${req_id} created user (${id})`)
+        logger.debug(`Moderator #${jwt.id} created user (${id})`)
 
-                res.json({details: {id}})
-            })
-            .catch(err => {
-                logger.error(`Error on created user ${username}`)
-                next(err)
-            })
+        res.json({details: {id}})
     }
 }
 

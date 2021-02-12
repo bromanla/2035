@@ -1,5 +1,3 @@
-const multer = require('multer')
-
 module.exports = [
     // Page not Found
     (req, res) => {

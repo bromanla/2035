@@ -1,19 +1,42 @@
-const
-    jwt = require('jsonwebtoken'),
-    knex = require('../db'),
-    { v4: uuid } = require('uuid');
+const jwt = require('jsonwebtoken')
+const knex = require('../db')
+const { v4: uuid } = require('uuid')
+const bcrypt = require('bcryptjs')
 
 class AuthController {
     // Authorization users
     login = async (req, res) => {
-        const { user } = req;
+        const { username, password } = req.body;
+
+        const [ user ] = await knex('users')
+            .select('id', 'username', 'password', 'role')
+            .where({username})
+
+        if (!user)
+            return res.status(422).json({error: {msg: 'User is not found'}})
+
+        const isComparison = await bcrypt.compare(password, user.password);
+
+        if (!isComparison)
+            return res.status(422).json({error: {msg: 'Incorrect password'}})
 
         await this.issueToken(req, res, user)
     }
 
     // Get a new tokens
     refresh = async (req, res) => {
-        const { user } = req;
+        const { token } = req.body;
+
+        const [ user ] = await knex('tokens')
+            .select('users.id', 'expires_in', knex.ref('tokens.id').as('token_id'))
+            .leftJoin('users', 'user_id', 'users.id')
+            .where({token})
+
+        if (!user)
+            return res.status(422).json({error: {msg: 'Token not found'}})
+
+        if (user.expires_in < Date.now())
+            return res.status(422).json({error: {msg: 'Token expired'}})
 
         await knex('tokens')
             .where('id', user.token_id)
@@ -22,17 +45,38 @@ class AuthController {
         await this.issueToken(req, res, user)
     }
 
-    // Logout all devices
+    // Logout this client
     logout = async (req, res) => {
-        const { user } = req;
+        const { token } = req.body;
 
-        const delCount = await knex('tokens')
+        const count = await knex('tokens')
+            .where({token})
+            .del()
+
+        if (count === 0)
+            return res.status(422).json({error: {msg: 'Token not found'}})
+
+        res.json({msg: 'Ok'})
+    }
+
+    logoutAll = async (req, res) => {
+        const { token } = req.body;
+
+        const [ user ] = await knex('tokens')
+            .leftJoin('users', 'users.id', 'user_id')
+            .where({token})
+            .select('users.id')
+
+        if (!user)
+            return res.status(422).json({error: {msg: 'Token not found'}})
+
+        const count = await knex('tokens')
             .where('user_id', user.id)
             .del()
 
         res.json({
             msg: 'Ok',
-            details: { delCount }
+            details: { count }
         })
     }
 

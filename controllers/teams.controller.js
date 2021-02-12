@@ -3,7 +3,7 @@ const { knex_small_photo, knex_team_icon } = require('./entities');
 
 class TeamsController {
     /* Methods */
-    root = async (req, res) => {
+    list = async (req, res) => {
         const page = req.query.page ?? 1;
         const archive = req.query.archive ?? false;
 
