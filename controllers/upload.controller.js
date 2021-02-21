@@ -1,5 +1,5 @@
 const knex = require('../db')
-const { knex_small_photo_uploads} = require('./entities')
+const { url_constructor } = require('./entities')
 const sharp = require('sharp')
 const { v4: uuid } = require('uuid')
 const path = require('path')
@@ -20,14 +20,14 @@ class UploadController {
     /* Methods */
     usersList = async (req, res) => {
         const photos = await knex('upload_queue')
-            .select('id', 'file_name', knex_small_photo_uploads)
+            .select('id', 'file_name', url_constructor('file_name', 'small_photo'))
             .where({type: 'small_photo'})
 
         res.json(photos)
     }
 
     usersPhoto = async (req, res) => {
-        const { id, role } = req.jwt;
+        const { id } = req.jwt;
 
         /* Uploading a photo */
         multer(req, res, async (err) => {

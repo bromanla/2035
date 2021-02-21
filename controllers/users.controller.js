@@ -1,68 +1,73 @@
-const bcrypt = require('bcryptjs');
-const knex = require('../db');
-const { knex_small_photo } = require('./entities');
+const bcrypt = require('bcryptjs')
+const knex = require('../db')
+const { url_constructor } = require('./entities')
 
 class UsersController {
-    constructor () {
-        /**
-        * Forming a response
-        * @param {Express} res
-        * @param {*} role - Role of the required user
-        * @param {*} id - ID of the required user
-        **/
-        this.profileRouter = async (res, role, id) => {
-            let row;
-
-            switch (role) {
-                case 'guest':
-                    // Guest
-                    break;
-                case 'student':
-                    [ row ] = await this.getProfileStudent(id)
-                    break;
-                case 'curator':
-                    [ row ] = await this.getProfileCurator(id)
-                    break;
-                case 'moderator':
-                    // Moderator
-                    break;
-            }
-
-            res.json(row)
-        }
-
-        this.getProfileCurator = async (id) => knex('users')
-            .leftJoin('curators', 'curators.user_id', 'users.id')
-            .select('users.id', 'name', 'surname', 'patronymic', 'role', knex_small_photo, 'position')
-            .where('user_id', id)
-
-        this.getProfileStudent = async (id) => knex('users')
-            .leftJoin('students', 'students.user_id', 'users.id')
-            .leftJoin('groups', 'group_id', 'groups.id')
-            .leftJoin('faculties', 'faculty_id', 'faculties.id')
-            .leftJoin('universities', 'university_id', 'universities.id')
-            .select('users.id', 'name', 'surname', 'patronymic', 'role', knex_small_photo, 'course', 'group_name', 'faculty_name', 'university_name', 'university_briefly')
-            .where('users.id', id)
-    }
-
     /* Methods */
-    root = async (req, res) => {
-        const { jwt } = req;
+    list = async (req, res) => {
+        const page = req.query.page ?? 1;
+        const role = req.query.role ?? false;
 
-        await this.profileRouter(res, jwt.role, jwt.id);
+        const users = await knex('users')
+            .select('id', 'name', 'surname', 'patronymic', 'role', url_constructor('small_photo'))
+            .offset((page - 1) * process.env.PER_PAGE)
+            .limit(process.env.PER_PAGE)
+            .where((builder) => {
+                role && builder.where({role})
+            })
+
+        res.json({
+            users,
+            pagination: {
+                current_page: +page,
+                current_entries: users.length,
+                per_page: +process.env.PER_PAGE
+            }
+        })
     }
 
     byId = async (req, res) => {
         const { id } = req.params;
 
-        const [ user ] = await knex('users')
-            .where('id', id)
-            .select('role')
+        const user = await knex('users')
+            .where({ id })
+            .select('id', 'role', 'name', 'surname', 'patronymic', url_constructor('small_photo'))
+            .first()
 
         if (!user)
             return res.status(404).json({error: {msg: 'User not found', value: id}})
 
-        await this.profileRouter(res, user.role, id);
+        let extra = {};
+
+        // Additional information
+        switch (user.role) {
+            case 'student':
+                extra = await knex('students')
+                    .leftJoin('groups', 'group_id', 'groups.id')
+                    .leftJoin('faculties', 'faculty_id', 'faculties.id')
+                    .leftJoin('universities', 'university_id', 'universities.id')
+                    .select('course', 'group_name', 'faculty_name', 'university_name', 'university_briefly')
+                    .where({user_id: id})
+                    .first()
+
+                break;
+            case 'curator':
+                extra = await knex('curators')
+                    .select('position')
+                    .where({user_id: id})
+                    .first()
+
+                break;
+            case 'guest':
+            case 'moderator':
+                // In developing
+                break;
+            }
+
+        res.json({
+            ...user,
+            ...extra
+        })
     }
 
     create = async (req, res) => {

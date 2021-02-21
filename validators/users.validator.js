@@ -1,12 +1,22 @@
-const  { body } = require('express-validator');
+const  { body, query } = require('express-validator');
 const Validator = require('./validator');
-const { _id } = require('./entities');
+const { _id, _page } = require('./entities');
 
 class UsersValidator extends Validator {
     constructor () {
         super();
 
         this._id = _id;
+
+        this._page = _page;
+
+        this._listRole = (req) => query('role')
+            .optional()
+            .custom(async role => {
+                if (!['student', 'curator', 'guest', 'moderator'].includes(role))
+                    throw 'Role doesn\'t exist'
+            })
+            .run(req)
 
         this._username = (req) => body('username')
             .exists().withMessage('Username is required').bail()
@@ -47,6 +57,10 @@ class UsersValidator extends Validator {
     }
 
     /* Methods */
+    list = async (req, res, next) => {
+        await this.validationQueue(req, res, next, [this._page, this._listRole])
+    }
+
     byId = async (req, res, next) => {
         await this.validationQueue(req, res, next, [this._id])
     }

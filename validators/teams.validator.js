@@ -1,6 +1,6 @@
 const { query } = require('express-validator');
 const Validator = require('./validator')
-const { _id } = require('./entities')
+const { _id, _page } = require('./entities')
 
 class TeamsValidator extends Validator {
     constructor () {
@@ -8,16 +8,7 @@ class TeamsValidator extends Validator {
 
         this._id = _id;
 
-        this._page = (req) => query('page')
-            .optional()
-            .isNumeric({
-                no_symbols: true
-            })
-            .isInt({
-                min: 1,
-                allow_leading_zeroes: false
-            })
-            .run(req)
+        this._page = _page;
 
         this._archive = (req) => query('archive', 'Invalid archive')
             .optional()

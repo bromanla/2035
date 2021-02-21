@@ -1,5 +1,5 @@
-const knex = require('../db');
-const { knex_small_photo, knex_team_icon } = require('./entities');
+const knex = require('../db')
+const { url_constructor } = require('./entities')
 
 class TeamsController {
     /* Methods */
@@ -8,18 +8,18 @@ class TeamsController {
         const archive = req.query.archive ?? false;
 
         const teams = await knex('teams')
-            .select('id', 'team_name', knex_team_icon)
+            .select('id', 'team_name', url_constructor('team_icon'))
             .orderBy('id', 'desc')
-            .offset((page - 1) * process.env.TEAMS_PER_PAGE)
-            .limit(process.env.TEAMS_PER_PAGE)
-            .where('archive', archive)
+            .offset((page - 1) * process.env.PER_PAGE)
+            .limit(process.env.PER_PAGE)
+            .where({ archive })
 
         res.send({
             teams,
             pagination: {
                 current_page: +page,
                 current_entries: teams.length,
-                per_page: +process.env.TEAMS_PER_PAGE,
+                per_page: +process.env.PER_PAGE,
                 archive
             }
         })
@@ -28,9 +28,10 @@ class TeamsController {
     byId = async (req, res) => {
         const { id } = req.params;
 
-        const [ team ] = await knex('teams')
-            .select('id', 'team_name', 'team_description', knex_team_icon, 'customer')
-            .where('id', id)
+        const team = await knex('teams')
+            .select('id', 'team_name', 'team_description', url_constructor('team_icon'), 'customer')
+            .where({ id })
+            .first()
 
         if (!team)
             return res.status(404).json({error: {msg: 'Team not found', value: id}})
@@ -38,8 +39,8 @@ class TeamsController {
         const members = await knex('teams')
             .leftJoin('teams_members', 'team_id', 'teams.id')
             .leftJoin('users', 'users.id', 'user_id')
-            .select('users.id', 'name', 'surname', 'patronymic', knex_small_photo, 'team_role')
-            .where('teams.id', id)
+            .select('users.id', 'name', 'surname', 'patronymic', url_constructor('small_photo'), 'team_role')
+            .where({'teams.id': id})
 
         res.json({ team, members })
     }
