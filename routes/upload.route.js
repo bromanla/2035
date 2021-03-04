@@ -1,13 +1,8 @@
-const router = require('express').Router();
-const uploadController = require('../controllers/upload.controller');
+const router = require('express').Router()
+const uploadController = require('../controllers/upload.controller')
+const { accessControl } = require('./entities')
 
-router.use((req, res, next) => {
-    if (req.jwt.role !== 'moderator')
-        return res.status(403).json({ error: {msg: 'No access rights to the method'}})
-
-    next()
-})
-
+router.use(accessControl)
 router.get('/users', uploadController.usersList)
 router.post('/users', uploadController.usersPhoto)
 

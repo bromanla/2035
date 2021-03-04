@@ -1,6 +1,6 @@
 {
   "name": "2035",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "University project management",
   "main": "app.js",
   "author": "bromanla <bromanla.json@gmail.com>",
@@ -26,8 +26,5 @@
     "pg": "^8.5.1",
     "sharp": "^0.27.1",
     "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.10"
   }
 }

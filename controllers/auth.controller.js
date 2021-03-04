@@ -13,12 +13,12 @@ class AuthController {
             .where({username})
 
         if (!user)
-            return res.status(422).json({error: {msg: 'User is not found'}})
+            return res.status(422).json({error: {msg: 'User is not found', value: username, param: 'username', location: 'body'}})
 
         const isComparison = await bcrypt.compare(password, user.password);
 
         if (!isComparison)
-            return res.status(422).json({error: {msg: 'Incorrect password'}})
+            return res.status(422).json({error: {msg: 'Incorrect password', value: password, param: 'password', location: 'body'}})
 
         await this.issueToken(req, res, user)
     }
@@ -27,16 +27,17 @@ class AuthController {
     refresh = async (req, res) => {
         const { token } = req.body;
 
-        const [ user ] = await knex('tokens')
+        const user = await knex('tokens')
             .select('users.id', 'expires_in', knex.ref('tokens.id').as('token_id'))
             .leftJoin('users', 'user_id', 'users.id')
-            .where({token})
+            .where({ token })
+            .first()
 
         if (!user)
-            return res.status(422).json({error: {msg: 'Token not found'}})
+            return res.status(422).json({error: {msg: 'Token not found', value: token}})
 
         if (user.expires_in < Date.now())
-            return res.status(422).json({error: {msg: 'Token expired'}})
+            return res.status(422).json({error: {msg: 'Token expired', value: token}})
 
         await knex('tokens')
             .where('id', user.token_id)
@@ -62,10 +63,11 @@ class AuthController {
     logoutAll = async (req, res) => {
         const { token } = req.body;
 
-        const [ user ] = await knex('tokens')
+        const user = await knex('tokens')
             .leftJoin('users', 'users.id', 'user_id')
             .where({token})
             .select('users.id')
+            .first()
 
         if (!user)
             return res.status(422).json({error: {msg: 'Token not found'}})

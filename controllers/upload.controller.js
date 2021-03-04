@@ -70,7 +70,7 @@ class UploadController {
                     })
                     .returning('id')
 
-                logger.debug(`Moderator #${id} uploaded an image (${fileName})`)
+                logger.trace(`Moderator #${id} uploaded an image (${fileName})`)
 
                 res.json({
                     details: {

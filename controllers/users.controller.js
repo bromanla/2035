@@ -72,16 +72,15 @@ class UsersController {
 
     create = async (req, res) => {
         const { jwt } = req;
-
-        if (jwt.role !== 'moderator')
-            return res.status(403).json({ error: {msg: 'No access rights to the method'}})
-
         const { username, password, role, name, surname, patronymic, photo_id} = req.body
 
         let small_photo = 'default.jpg'
 
         if (photo_id) {
-            const [ photo ] = await knex('upload_queue').select().where('id', photo_id)
+            const photo = await knex('upload_queue')
+                .select()
+                .where('id', photo_id)
+                .first()
 
             if (!photo)
                 return res.status(422).json({error : {msg: 'Photo not found in db', value: photo_id}})
@@ -93,21 +92,48 @@ class UsersController {
             small_photo = photo.file_name
         }
 
-        const [ id ] = await knex('users')
-            .insert({
-                username,
-                password: bcrypt.hashSync(password, 10),
-                role,
-                name,
-                surname,
-                patronymic,
-                small_photo
-            })
-            .returning('id')
+        try {
+            const [ id ] = await knex('users')
+                .insert({
+                    username,
+                    password: bcrypt.hashSync(password, 10),
+                    role,
+                    name,
+                    surname,
+                    patronymic,
+                    small_photo
+                })
+                .returning('id')
 
-        logger.debug(`Moderator #${jwt.id} created user (${id})`)
+            logger.debug(`Moderator #${jwt.id} created user (${id})`)
 
-        res.json({details: {id}})
+            res.json({details: {id}})
+        } catch (err) {
+            let code = 500,
+                msg = 'The server cannot handle the error';
+
+            switch (err.code) {
+                case '23505':
+                    code = 422
+                    msg = 'Duplicate username'
+                default:
+                    break;
+            }
+
+            return res.status(code).json({error : {msg, value: username}})
+        }
+    }
+
+    change = async (req, res) => {
+        const { jwt } = req;
+        const { id } = req.params;
+        const { name, surname, patronymic, password, role } = req.body
+
+        const obj = { name, surname, patronymic, password, role }
+
+        Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
+
+        res.send(id)
     }
 }
 
