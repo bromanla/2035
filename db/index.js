@@ -15,7 +15,7 @@ knex('users').count('id')
     })
     .catch(err => {
         logger.fatal(`Test query error: ${err}`)
-        process.exit(1)
+        // process.exit(1)
     })
 
 module.exports = knex;

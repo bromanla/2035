@@ -31,43 +31,13 @@ class UsersController {
 
         const user = await knex('users')
             .where({ id })
-            .select('id', 'role', 'name', 'surname', 'patronymic', url_constructor('small_photo'))
+            .select('id', 'role', 'name', 'surname', 'patronymic', url_constructor('small_photo'), 'description')
             .first()
 
         if (!user)
             return res.status(404).json({error: {msg: 'User not found', value: id}})
 
-        let extra = {};
-
-        // Additional information
-        switch (user.role) {
-            case 'student':
-                extra = await knex('students')
-                    .leftJoin('groups', 'group_id', 'groups.id')
-                    .leftJoin('faculties', 'faculty_id', 'faculties.id')
-                    .leftJoin('universities', 'university_id', 'universities.id')
-                    .select('course', 'group_name', 'faculty_name', 'university_name', 'university_briefly')
-                    .where({user_id: id})
-                    .first()
-
-                break;
-            case 'curator':
-                extra = await knex('curators')
-                    .select('position')
-                    .where({user_id: id})
-                    .first()
-
-                break;
-            case 'guest':
-            case 'moderator':
-                // In developing
-                break;
-            }
-
-        res.json({
-            ...user,
-            ...extra
-        })
+        res.json(user)
     }
 
     create = async (req, res) => {

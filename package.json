@@ -3,14 +3,16 @@
   "version": "1.4.2",
   "description": "University project management",
   "main": "app.js",
-  "author": "bromanla <bromanla.json@gmail.com>",
+  "author": "Roman <bromanla.json@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git@github.com:bromanla/2035.git"
+    "url": "https://github.com/bromanla/2035.git"
+  },
+  "scripts": {
+    "test": "jest"
   },
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
@@ -26,5 +28,9 @@
     "pg": "^8.5.1",
     "sharp": "^0.27.1",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "axios": "^0.21.1",
+    "jest": "^26.6.3"
   }
 }
