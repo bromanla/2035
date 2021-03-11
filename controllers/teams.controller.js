@@ -4,8 +4,8 @@ const { url_constructor } = require('./entities')
 class TeamsController {
     /* Methods */
     list = async (req, res) => {
-        const page = req.query.page ?? 1;
-        const archive = req.query.archive ?? false;
+        const page = req.query.page ?? 1
+        const archive = req.query.archive ?? false
 
         const teams = await knex('teams')
             .select('id', 'team_name', url_constructor('team_icon'))
@@ -14,19 +14,26 @@ class TeamsController {
             .limit(process.env.PER_PAGE)
             .where({ archive })
 
+        const [{ total_entries }] = await knex('teams')
+            .count('* as total_entries')
+            .where({ archive })
+
+        const total_pages = Math.ceil(total_entries / process.env.PER_PAGE);
+
         res.send({
             teams,
             pagination: {
                 current_page: +page,
                 current_entries: teams.length,
-                per_page: +process.env.PER_PAGE,
-                archive
+                total_entries: +total_entries,
+                total_pages,
+                per_page: +process.env.PER_PAGE
             }
         })
     }
 
     byId = async (req, res) => {
-        const { id } = req.params;
+        const { id } = req.params
 
         const team = await knex('teams')
             .select('id', 'team_name', 'team_description', url_constructor('team_icon'), 'customer')

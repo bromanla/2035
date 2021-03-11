@@ -5,8 +5,8 @@ const { url_constructor } = require('./entities')
 class UsersController {
     /* Methods */
     list = async (req, res) => {
-        const page = req.query.page ?? 1;
-        const role = req.query.role ?? false;
+        const page = req.query.page ?? 1
+        const role = req.query.role ?? false
 
         const users = await knex('users')
             .select('id', 'name', 'surname', 'patronymic', 'role', url_constructor('small_photo'))
@@ -16,18 +16,28 @@ class UsersController {
                 role && builder.where({role})
             })
 
+        const [{ total_entries }] = await knex('users')
+            .count('* as total_entries')
+            .where((builder) => {
+                role && builder.where({role})
+            })
+
+        const total_pages = Math.ceil(total_entries / process.env.PER_PAGE);
+
         res.json({
             users,
             pagination: {
                 current_page: +page,
                 current_entries: users.length,
+                total_entries: +total_entries,
+                total_pages,
                 per_page: +process.env.PER_PAGE
             }
         })
     }
 
     byId = async (req, res) => {
-        const { id } = req.params;
+        const { id } = req.params
 
         const user = await knex('users')
             .where({ id })

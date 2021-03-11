@@ -1,4 +1,3 @@
-
 // Middleware secure method
 module.exports.accessControl =  async (req, res, next) => {
     if (req.jwt.role === 'moderator' || req.jwt.role === 'admin')
