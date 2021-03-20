@@ -8,34 +8,49 @@ class VoteController {
         if (jwt.role !== 'guest')
             return res.status(403).json({ error: {msg: 'No access rights to the method'}})
 
-        // const guest = await knex('events_guests')
-        //     .select()
-        //     .where({
-        //         event_id: id,
-        //         user_id: jwt.id
-        //     })
-
         res.json('Гость');
     }
 
     audience = async (req, res) => {
-        const { jwt } = req;
-        const { id } = req.params;
+        const { jwt } = req
+        const { id } = req.params
+        const { vote } = req.body
 
-        if (jwt.role === 'guest')
-            return res.status(403).json({ error: {msg: 'No access rights to the method'}})
+        const alreadyVoted = await knex('vote_audience')
+            .where({
+                user_id: jwt.id,
+                team_id: id
+            })
+            .first()
 
-        const [ event ] = await knex('events').select('completed').where({id});
+        if (alreadyVoted)
+            return res.status(409).json({
+                errors: [{
+                    msg: 'Already voted',
+                    value: id
+                }]
+            })
 
-        if (!event)
-            return res.status(404).json({error: {msg: 'Event not found', value: id}})
+        const team = await knex('teams')
+            .where({ id })
+            .first()
 
-        if (event.completed)
-            return res.status(400).json({error: {msg: 'Event ended', value: id}})
+        if (!team)
+            return res.status(404).json({
+                errors: [{
+                    msg: 'Team not found',
+                    value: id
+                }]
+            })
 
-        //TODO: check voice
+        await knex('vote_audience')
+            .insert({
+                user_id: jwt.id,
+                team_id: id,
+                vote
+            })
 
-        res.json('Зрительское голосование');
+        res.json({ msg: 'Ok' });
     }
 }
 

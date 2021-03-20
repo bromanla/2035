@@ -2,9 +2,9 @@ const router = require('express').Router()
 const voteController = require('../controllers/vote.controller')
 const voteValidator = require('../validators/vote.validator')
 
-// in dev
+// todo: refactoring
 // router.get('/guest/:id', voteValidator.guest, voteController.guest)
-// router.get('/audience/:id', voteValidator.audience, voteController.audience)
+router.post('/audience/:id', voteValidator.audience, voteController.audience)
 
 module.exports = {
     path: '/vote',

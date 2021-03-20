@@ -8,17 +8,36 @@ class AuthController {
     login = async (req, res) => {
         const { username, password } = req.body;
 
-        const [ user ] = await knex('users')
-            .select('id', 'username', 'password', 'role')
+        const user = await knex('users')
+            .select('id', 'username', 'password', 'role', 'archive')
             .where({username})
+            .first()
 
         if (!user)
-            return res.status(422).json({error: {msg: 'User is not found', value: username, param: 'username', location: 'body'}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'User is not found'
+                }]
+            })
+
+        if (user.archive)
+            return res.status(422).json({
+                errors: [{
+                    msg: 'User is archived'
+                }]
+            })
 
         const isComparison = await bcrypt.compare(password, user.password);
 
         if (!isComparison)
-            return res.status(422).json({error: {msg: 'Incorrect password', value: password, param: 'password', location: 'body'}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'Incorrect password',
+                    value: password,
+                    param: 'password',
+                    location: 'body'
+                }]
+            })
 
         await this.issueToken(req, res, user)
     }
@@ -28,16 +47,33 @@ class AuthController {
         const { token } = req.body;
 
         const user = await knex('tokens')
-            .select('users.id', 'expires_in', knex.ref('tokens.id').as('token_id'))
+            .select('users.id', 'expires_in', 'archive', knex.ref('tokens.id').as('token_id'))
             .leftJoin('users', 'user_id', 'users.id')
             .where({ token })
             .first()
 
         if (!user)
-            return res.status(422).json({error: {msg: 'Token not found', value: token}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'Token not found',
+                    value: token
+                }]
+            })
+
+        if (user.archive)
+            return res.status(422).json({
+                errors: [{
+                    msg: 'User is archived'
+                }]
+            })
 
         if (user.expires_in < Date.now())
-            return res.status(422).json({error: {msg: 'Token expired', value: token}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'Token expired',
+                    value: token
+                }]
+            })
 
         await knex('tokens')
             .where('id', user.token_id)
@@ -55,7 +91,12 @@ class AuthController {
             .del()
 
         if (count === 0)
-            return res.status(422).json({error: {msg: 'Token not found'}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'Token not found',
+                    value: token
+                }]
+            })
 
         res.json({msg: 'Ok'})
     }
@@ -70,7 +111,12 @@ class AuthController {
             .first()
 
         if (!user)
-            return res.status(422).json({error: {msg: 'Token not found'}})
+            return res.status(422).json({
+                errors: [{
+                    msg: 'Token not found',
+                    value: token
+                }]
+            })
 
         const count = await knex('tokens')
             .where('user_id', user.id)

@@ -6,8 +6,8 @@ const { accessControl } = require('./entities')
 router.get('/', usersValidator.list, usersController.list)
 router.get('/:id', usersValidator.byId, usersController.byId)
 
-// refactoring
-// router.post('/', accessControl, usersValidator.create, usersController.create)
+// todo: refactoring
+router.post('/', accessControl, usersValidator.create, usersController.create)
 // router.patch('/:id', accessControl, usersController.change)
 
 module.exports = {

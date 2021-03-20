@@ -1,28 +1,24 @@
+const { validationResult } = require('express-validator')
+
 class Validator {
     /**
-    * Synchronous validation queue
-    * @param {Express} req
-    * @param {Express} res
-    * @param {Express} next
+    * Validation queue
     * @param {Array} handlers - Array of validation functions
     **/
-    validationQueue = async (req, res, next, handlers) => {
-        try {
-            for (const validator of handlers) {
-                const validateResult = await validator(req);
+    validate = validations => {
+        return async (req, res, next) => {
+            await Promise.all(validations.map(validation => validation.run(req)));
 
-                if (!validateResult.isEmpty())
-                    throw validateResult.errors
+            const errors = validationResult(req);
+
+            if (errors.isEmpty()) {
+                return next();
             }
 
-            next()
-        } catch (errors) {
-            const [ error ] = errors;
-            logger.trace(error)
-
-            res.status(422).json({ error })
-        }
-    }
+            logger.trace(errors.array())
+            res.status(422).json({ errors: errors.array() })
+        };
+      };
 }
 
 module.exports = Validator

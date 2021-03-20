@@ -45,12 +45,18 @@ class UsersController {
             .first()
 
         if (!user)
-            return res.status(404).json({error: {msg: 'User not found', value: id}})
+            return res.status(404).json({
+                errors: [{
+                    msg: 'User not found',
+                    value: id
+                }]
+            })
 
         res.json(user)
     }
 
     create = async (req, res) => {
+        return res.send('okes')
         const { jwt } = req;
         const { username, password, role, name, surname, patronymic, photo_id} = req.body
 

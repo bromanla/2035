@@ -41,7 +41,12 @@ class TeamsController {
             .first()
 
         if (!team)
-            return res.status(404).json({error: {msg: 'Team not found', value: id}})
+            return res.status(404).json({
+                errors: [{
+                    msg: 'Team not found',
+                    value: id
+                }]
+            })
 
         const members = await knex('teams')
             .leftJoin('teams_members', 'team_id', 'teams.id')

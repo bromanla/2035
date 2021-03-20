@@ -1,21 +1,18 @@
+const { body } = require('express-validator')
+const entities = require('./entities')
 const Validator = require('./validator')
-const { _id } = require('./entities')
 
 class VoteValidator extends Validator {
-    constructor () {
-        super();
-
-        this._id = _id
-    }
+    vote = body('vote')
+        .exists().withMessage('Vote is required').bail()
+        .isBoolean().withMessage('Invalid vote')
 
     /* Methods */
-    audience = async (req, res, next) => {
-        await this.validationQueue(req, res, next, [this._id])
-    }
+    audience = this.validate([
+        entities.id,
+        this.vote
+    ])
 
-    guest = async (req, res, next) => {
-        await this.validationQueue(req, res, next, [this._id])
-    }
 }
 
 module.exports = new VoteValidator()

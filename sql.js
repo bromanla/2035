@@ -122,24 +122,19 @@ logger.info('Generate SQL')
 
     /* Events */
     const events = [
-        {event_name: 'Крашетест', event_description: 'IT Команды'},
-        {event_name: 'Крашетест', event_description: 'Гуманитарные команды'},
-        {event_name: 'Стрестест', event_description: 'IT Команды'},
-        {event_name: 'Стрестест', event_description: 'Гуманитарные команды'},
-        {event_name: 'Финал', event_description: 'Конец мероприятия'}
+        {event_name: 'Крашетест', event_description: 'IT Команды', event_start: new Date('December 20, 2021 16:30:00'), event_end: new Date('December 20, 2021 18:30:00'), completed: true},
+        {event_name: 'Крашетест', event_description: 'Гуманитарные команды', event_start: new Date('December 21, 2021 16:00:00'), event_end: new Date('December 21, 2021 17:00:00'), completed: true},
+        {event_name: 'Стрестест', event_description: 'IT Команды', event_start: new Date()},
+        {event_name: 'Стрестест', event_description: 'Гуманитарные команды', event_start: new Date()},
+        {event_name: 'Финал', event_description: 'Конец мероприятия', event_start: new Date('2 July, 2021 16:30:00')}
     ]
 
     for(let event of events) {
-        // TODO: Разные даты
-        const { event_name, event_description } = event;
+        const { event_name } = event;
         const events_guests = [];
 
         const [ event_id ] = await knex('events')
-            .insert({
-                event_name,
-                event_description,
-                event_start: new Date()
-            })
+            .insert(event)
             .returning('id')
 
         for (let i = 0; i < 4; i++) {

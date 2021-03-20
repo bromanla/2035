@@ -2,35 +2,29 @@ const { body } = require('express-validator');
 const Validator = require('./validator');
 
 class AuthValidator extends Validator {
-    constructor () {
-        super();
+    username = body('username')
+        .exists().withMessage('Username is required').bail()
+        .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
+        .isLength({min: 4, max: 16}).withMessage('Invalid length')
 
-        this._username = async (req) => body('username')
-            .exists().withMessage('Username is required').bail()
-            .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
-            .isLength({min: 4, max: 16}).withMessage('Invalid length').bail()
-            .run(req)
+    password = body('password')
+        .exists().withMessage('Password is required').bail()
+        .isString().withMessage('Unacceptable symbols').bail()
+        .isLength({min: 4, max: 32}).withMessage('Invalid length')
 
-        this._password = async (req) => body('password')
-            .exists().withMessage('Password is required').bail()
-            .isString().withMessage('Unacceptable symbols').bail()
-            .isLength({min: 4, max: 32}).withMessage('Invalid length').bail()
-            .run(req)
-
-        this._token = async (req) => body('token')
-            .exists().withMessage('Token is required').bail()
-            .isUUID(4).withMessage('Invalid token').bail()
-            .run(req)
-    }
+    token = body('token')
+        .exists().withMessage('Token is required').bail()
+        .isUUID(4).withMessage('Invalid token')
 
     /* Methods */
-    login = async (req, res, next) => {
-        this.validationQueue(req, res, next, [this._username, this._password])
-    }
+    login = this.validate([
+        this.username,
+        this.password
+    ])
 
-    refresh = async (req, res, next) => {
-        this.validationQueue(req, res, next, [this._token])
-    }
+    refresh = this.validate([
+        this.token
+    ])
 
     logout = this.refresh
 

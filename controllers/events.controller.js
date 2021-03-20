@@ -8,7 +8,7 @@ class EventsController {
         const completed = req.query.completed ?? false
 
         const events = await knex('events')
-            .select('id', 'event_name', 'event_description', 'event_start')
+            .select('id', 'event_name', 'event_description', 'event_start', 'event_end', 'completed')
             .orderBy('id', 'desc')
             .offset((page - 1) * process.env.PER_PAGE)
             .limit(process.env.PER_PAGE)
@@ -41,7 +41,12 @@ class EventsController {
             .first()
 
         if (!event)
-            return res.status(404).json({error: {msg: 'Event not found', value: id}})
+            return res.status(404).json({
+                errors: [{
+                    msg: 'Event not found',
+                    value: id
+                }]
+            })
 
         const teams = await knex('events_teams')
             .leftJoin('teams', 'teams.id', 'team_id')

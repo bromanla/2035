@@ -1,81 +1,79 @@
-const  { body, query } = require('express-validator');
-const Validator = require('./validator');
-const { _id, _page } = require('./entities');
+const  { body, query, param } = require('express-validator')
+const Validator = require('./validator')
+const { id, page } = require('./entities')
 
 class UsersValidator extends Validator {
-    constructor () {
-        super();
+    id = id
+    page = page
 
-        this._id = _id;
+    role = query('role')
+        .optional()
+        .custom(async role => {
+            if (!['student', 'curator', 'guest', 'moderator'].includes(role))
+                throw 'Role doesn\'t exist'
+        })
 
-        this._page = _page;
+    // Create user
+    create_username = body('username')
+        .exists().withMessage('Username is required').bail()
+        .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
+        .isLength({ min: 4, max: 16 }).withMessage('Invalid length').bail()
 
-        this._listRole = (req) => query('role')
-            .optional()
-            .custom(async role => {
-                if (!['student', 'curator', 'guest', 'moderator'].includes(role))
-                    throw 'Role doesn\'t exist'
-            })
-            .run(req)
+    create_password = body('password')
+        .exists().withMessage('Password is required').bail()
+        .isString().withMessage('Unacceptable symbols').bail()
+        .isLength({ min: 4, max: 32 }).withMessage('Invalid length')
 
-        this._username = (req) => body('username')
-            .exists().withMessage('Username is required').bail()
-            .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
-            .isLength({min: 4, max: 16}).withMessage('Invalid length').bail()
-            .run(req)
+    create_role = body('role')
+        .exists().withMessage('Role is required').bail()
+        .custom(async role => {
+            if (!['student', 'curator', 'guest', 'moderator'].includes(role))
+                throw 'Role doesn\'t exist'
+        })
 
-        this._password = (req) => body('password')
-            .exists().withMessage('Password is required').bail()
-            .isString().withMessage('Unacceptable symbols').bail()
-            .isLength({min: 4, max: 32}).withMessage('Invalid length')
-            .run(req)
+    create_full_name = (field) => body(field)
+        .exists().withMessage(`${field[0].toUpperCase() + field.substring(1)} is required`).bail()
+        .isAlpha('ru-RU').withMessage('Unacceptable symbols').bail()
+        .isLength({ max: 32 }).withMessage('Invalid length')
 
-        this._role = (req) => body('role')
-            .exists().withMessage('Role is required').bail()
-            .custom(async role => {
-                if (!['student', 'curator', 'guest', 'moderator'].includes(role))
-                    throw 'Role doesn\'t exist'
-            })
-            .run(req)
+    create_description = body('description')
+        .optional()
+        .isString().withMessage('Unacceptable symbols').bail()
+        .isLength({ max: 128 }).withMessage('Invalid length')
 
-        this._FIO = (field) => (req) => body(field)
-            .exists().withMessage(`${field} is required`).bail()
-            .isAlpha('ru-RU').withMessage('Unacceptable symbols').bail()
-            .isLength({max: 32}).withMessage('Invalid length')
-            .run(req)
+    create_archive = body('archive')
+        .optional()
+        .isBoolean()
 
-        this._photo_id = (req) => body('photo_id')
-            .optional()
-            .isNumeric({
-                no_symbols: true
-            })
-            .isInt({
-                min: 1,
-                allow_leading_zeroes: false
-            })
-            .run(req)
-    }
+    create_photo_id = body('photo_id')
+        .optional()
+        .isNumeric({ no_symbols: true }).bail()
+        .isInt({
+            min: 1,
+            allow_leading_zeroes: false
+        })
 
     /* Methods */
-    list = async (req, res, next) => {
-        await this.validationQueue(req, res, next, [this._page, this._listRole])
-    }
+    list = this.validate([
+       this.page,
+       this.role
+    ])
 
-    byId = async (req, res, next) => {
-        await this.validationQueue(req, res, next, [this._id])
-    }
+    byId = this.validate([
+        this.id
+    ])
 
-    create = async (req, res, next) => {
-        await this.validationQueue(req, res, next, [
-            this._username,
-            this._password,
-            this._role,
-            this._FIO('name'),
-            this._FIO('surname'),
-            this._FIO('patronymic'),
-            this._photo_id
-        ])
-    }
+    create = this.validate([
+        this.create_username,
+        this.create_password,
+        this.create_role,
+        this.create_full_name('name'),
+        this.create_full_name('surname'),
+        this.create_full_name('patronymic'),
+        this.create_description,
+        this.create_archive,
+        this.create_photo_id
+    ])
 }
 
 module.exports = new UsersValidator()
