@@ -6,17 +6,25 @@ class TeamsController {
     list = async (req, res) => {
         const page = req.query.page ?? 1
         const archive = req.query.archive ?? false
+        const vote = req.query.vote === 'null' ? null : req.query.vote
 
         const teams = await knex('teams')
-            .select('id', 'team_name', url_constructor('team_icon'))
-            .orderBy('id', 'desc')
+            .select('teams.id', 'team_name', url_constructor('team_icon'), 'vote')
+            .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
             .offset((page - 1) * process.env.PER_PAGE)
             .limit(process.env.PER_PAGE)
-            .where({ archive })
+            .where((builder) => {
+                builder.where({archive})
+                typeof vote !== 'undefined' && builder.where({vote})
+            })
 
         const [{ total_entries }] = await knex('teams')
+            .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
             .count('* as total_entries')
-            .where({ archive })
+            .where((builder) => {
+                builder.where({archive})
+                typeof vote !== 'undefined' && builder.where({vote})
+            })
 
         const total_pages = Math.ceil(total_entries / process.env.PER_PAGE);
 
@@ -36,8 +44,9 @@ class TeamsController {
         const { id } = req.params
 
         const team = await knex('teams')
-            .select('id', 'team_name', 'team_description', url_constructor('team_icon'), 'customer')
-            .where({ id })
+            .select('teams.id', 'team_name', 'team_description', url_constructor('team_icon'), 'customer', 'vote')
+            .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
+            .where({ 'teams.id': id })
             .first()
 
         if (!team)
