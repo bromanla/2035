@@ -1,5 +1,5 @@
 const knex = require('../db')
-const { url_constructor } = require('./entities')
+const { url_constructor } = require('./modules/knex_constructor')
 
 class EventsController {
     /* Methods */

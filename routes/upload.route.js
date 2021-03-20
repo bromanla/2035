@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const uploadController = require('../controllers/upload.controller')
-const { accessControl } = require('./entities')
+const { accessControl } = require('./modules/control.js')
 
 router.use(accessControl)
 router.get('/users', uploadController.usersList)

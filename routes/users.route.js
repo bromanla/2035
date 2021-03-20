@@ -1,13 +1,13 @@
 const router = require('express').Router()
 const usersController = require('../controllers/users.controller')
 const usersValidator = require('../validators/users.validator')
-const { accessControl } = require('./entities')
+const { accessControl } = require('./modules/control.js')
 
 router.get('/', usersValidator.list, usersController.list)
 router.get('/:id', usersValidator.byId, usersController.byId)
 
 // todo: refactoring
-router.post('/', accessControl, usersValidator.create, usersController.create)
+// router.post('/', accessControl, usersValidator.create, usersController.create)
 // router.patch('/:id', accessControl, usersController.change)
 
 module.exports = {

@@ -1,30 +1,31 @@
 const knex = require('../db')
-const { url_constructor } = require('./entities')
+const { url_constructor } = require('./modules/knex_constructor')
 
 class TeamsController {
     /* Methods */
     list = async (req, res) => {
         const page = req.query.page ?? 1
         const archive = req.query.archive ?? false
-        const vote = req.query.vote === 'null' ? null : req.query.vote
+        const { vote } = req.query
+
+        const builder = (builder) => {
+            builder.where({archive})
+
+            if (vote !== undefined)
+                vote === 'null' ? builder.whereNull('vote') : builder.where({vote})
+        }
 
         const teams = await knex('teams')
             .select('teams.id', 'team_name', url_constructor('team_icon'), 'vote')
             .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
             .offset((page - 1) * process.env.PER_PAGE)
             .limit(process.env.PER_PAGE)
-            .where((builder) => {
-                builder.where({archive})
-                typeof vote !== 'undefined' && builder.where({vote})
-            })
+            .where(builder)
 
         const [{ total_entries }] = await knex('teams')
             .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
             .count('* as total_entries')
-            .where((builder) => {
-                builder.where({archive})
-                typeof vote !== 'undefined' && builder.where({vote})
-            })
+            .where(builder)
 
         const total_pages = Math.ceil(total_entries / process.env.PER_PAGE);
 

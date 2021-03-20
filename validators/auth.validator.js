@@ -1,5 +1,5 @@
-const { body } = require('express-validator');
-const Validator = require('./validator');
+const { body } = require('express-validator')
+const Validator = require('./validator')
 
 class AuthValidator extends Validator {
     username = body('username')

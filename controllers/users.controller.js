@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 const knex = require('../db')
-const { url_constructor } = require('./entities')
+const { url_constructor } = require('./modules/knex_constructor')
 
 class UsersController {
     /* Methods */
@@ -8,19 +8,19 @@ class UsersController {
         const page = req.query.page ?? 1
         const role = req.query.role ?? false
 
+        const builder = (builder) => {
+            role && builder.where({role})
+        }
+
         const users = await knex('users')
             .select('id', 'name', 'surname', 'patronymic', 'role', url_constructor('small_photo'))
             .offset((page - 1) * process.env.PER_PAGE)
             .limit(process.env.PER_PAGE)
-            .where((builder) => {
-                role && builder.where({role})
-            })
+            .where(builder)
 
         const [{ total_entries }] = await knex('users')
             .count('* as total_entries')
-            .where((builder) => {
-                role && builder.where({role})
-            })
+            .where(builder)
 
         const total_pages = Math.ceil(total_entries / process.env.PER_PAGE);
 

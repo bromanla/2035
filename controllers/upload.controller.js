@@ -1,5 +1,5 @@
 const knex = require('../db')
-const { url_constructor } = require('./entities')
+const { url_constructor } = require('./modules/knex_constructor')
 const sharp = require('sharp')
 const { v4: uuid } = require('uuid')
 const path = require('path')

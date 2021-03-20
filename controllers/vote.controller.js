@@ -1,15 +1,15 @@
-const knex = require('../db');
+const knex = require('../db')
 
 class VoteController {
     /* Methods */
-    guest = async (req, res) => {
-        const { jwt } = req;
+    // guest = async (req, res) => {
+    //     const { jwt } = req;
 
-        if (jwt.role !== 'guest')
-            return res.status(403).json({ error: {msg: 'No access rights to the method'}})
+    //     if (jwt.role !== 'guest')
+    //         return res.status(403).json({ error: {msg: 'No access rights to the method'}})
 
-        res.json('Гость');
-    }
+    //     res.json('Гость');
+    // }
 
     audience = async (req, res) => {
         const { jwt } = req

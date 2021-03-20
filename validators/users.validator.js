@@ -1,11 +1,8 @@
 const  { body, query, param } = require('express-validator')
 const Validator = require('./validator')
-const { id, page } = require('./entities')
+const { id, page } = require('./modules/entities')
 
 class UsersValidator extends Validator {
-    id = id
-    page = page
-
     role = query('role')
         .optional()
         .custom(async role => {
@@ -55,12 +52,12 @@ class UsersValidator extends Validator {
 
     /* Methods */
     list = this.validate([
-       this.page,
+       page,
        this.role
     ])
 
     byId = this.validate([
-        this.id
+        id
     ])
 
     create = this.validate([

@@ -1,11 +1,8 @@
-const { query, oneOf } = require('express-validator');
+const { query, oneOf } = require('express-validator')
 const Validator = require('./validator')
-const { id, page } = require('./entities')
+const { id, page } = require('./modules/entities')
 
 class TeamsValidator extends Validator {
-    id = id
-    page = page
-
     archive = query('archive')
         .optional()
         .isBoolean().withMessage('Invalid archive')
@@ -24,13 +21,13 @@ class TeamsValidator extends Validator {
 
     /* Methods */
     list = this.validate([
-        this.page,
+        page,
         this.archive,
         this.vote
     ])
 
     byId = this.validate([
-        this.id
+        id
     ])
 }
 

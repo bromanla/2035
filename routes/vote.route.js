@@ -2,7 +2,7 @@ const router = require('express').Router()
 const voteController = require('../controllers/vote.controller')
 const voteValidator = require('../validators/vote.validator')
 
-// todo: refactoring
+// todo: guest vote
 // router.get('/guest/:id', voteValidator.guest, voteController.guest)
 router.post('/audience/:id', voteValidator.audience, voteController.audience)
 

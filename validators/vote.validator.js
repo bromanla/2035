@@ -1,5 +1,5 @@
 const { body } = require('express-validator')
-const entities = require('./entities')
+const entities = require('./modules/entities')
 const Validator = require('./validator')
 
 class VoteValidator extends Validator {
