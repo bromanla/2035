@@ -2,9 +2,9 @@ module.exports = [
     // Page not Found
     (req, res) => {
         res.status(404).json({
-            error: {
+            errors: [{
                 msg: 'Method doesn\'t exist'
-            }
+            }]
         })
     },
     // Error handler
@@ -27,9 +27,9 @@ module.exports = [
         }
 
         return res.status(code).json({
-            error: {
+            errors: [{
                 msg: message
-            }
+            }]
         })
     }
 ]

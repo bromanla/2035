@@ -3,6 +3,31 @@ const knex = require('../db')
 const { url_constructor } = require('./modules/knex_constructor')
 
 class UsersController {
+    /* Functions */
+    #removeUndefined = (obj) => {
+        Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
+        return obj
+    }
+
+    #getImage = async (id) => {
+        const photo = await knex('upload_queue')
+            .where({ id })
+            .first()
+
+        if (!photo)
+            throw {
+                errors: [{
+                    msg: 'Photo not found in db', value: id
+                }]
+            }
+
+        await knex('upload_queue')
+            .where({ id })
+            .del()
+
+        return photo.file_name
+    }
+
     /* Methods */
     list = async (req, res) => {
         const page = req.query.page ?? 1
@@ -41,7 +66,7 @@ class UsersController {
 
         const user = await knex('users')
             .where({ id })
-            .select('id', 'role', 'name', 'surname', 'patronymic', url_constructor('small_photo'), 'description')
+            .select('id', 'role', 'name', 'surname', 'patronymic', url_constructor('small_photo'), 'description', 'archive')
             .first()
 
         if (!user)
@@ -56,15 +81,18 @@ class UsersController {
     }
 
     create = async (req, res) => {
-        return res.send('okes')
         const { jwt } = req;
-        const { username, password, role, name, surname, patronymic, photo_id} = req.body
 
+        /**
+        * Optional parameters: description, archive, photo_id
+        **/
+        const { username, password, role, name, surname, patronymic, photo_id, description, archive } = req.body
+
+        // Getting and checking the image
         let small_photo = 'default.jpg'
 
         if (photo_id) {
             const photo = await knex('upload_queue')
-                .select()
                 .where('id', photo_id)
                 .first()
 
@@ -78,6 +106,7 @@ class UsersController {
             small_photo = photo.file_name
         }
 
+        // Adding to the database
         try {
             const [ id ] = await knex('users')
                 .insert({
@@ -87,13 +116,18 @@ class UsersController {
                     name,
                     surname,
                     patronymic,
-                    small_photo
+                    small_photo,
+                    description,
+                    archive
                 })
                 .returning('id')
 
             logger.debug(`Moderator #${jwt.id} created user (${id})`)
 
-            res.json({details: {id}})
+            res.json({
+                msg: 'Ok',
+                details: { id }
+            })
         } catch (err) {
             let code = 500,
                 msg = 'The server cannot handle the error';
@@ -106,20 +140,60 @@ class UsersController {
                     break;
             }
 
-            return res.status(code).json({error : {msg, value: username}})
+            res.status(code).json({ errors: [{msg, value: username}] })
+            logger.error(`User creation error: ${err}`)
         }
     }
 
     change = async (req, res) => {
-        const { jwt } = req;
+        const { jwt } = req
+        const { id } = req.params
+        const { username, password, role, name, surname, patronymic, photo_id, description, archive } = req.body
+
+        const data = this.#removeUndefined({ username, password, role, name, surname, patronymic, photo_id, description, archive })
+
+        // Check image in database
+        if (photo_id)
+            try {
+                delete data.photo_id
+                data.small_photo = await this.#getImage(photo_id)
+            } catch (err) {
+                return res.status(422).json(err)
+            }
+
+        const count  = await knex('users')
+            .update(data)
+            .where({ id })
+
+        if (!count)
+            return res.status(404).json({
+                errors: [{
+                    msg: 'User not found',
+                    value: id
+                }]
+            })
+
+        res.json({ msg: 'Ok' })
+        logger.debug(`Moderator #${jwt.id} changed user (${id})`)
+    }
+
+    delete = async (req, res) => {
         const { id } = req.params;
-        const { name, surname, patronymic, password, role } = req.body
 
-        const obj = { name, surname, patronymic, password, role }
+        const count = await knex('users')
+            .del()
+            .where({ id })
 
-        Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
+        if (!count)
+            return res.status(404).json({
+                errors: [{
+                    msg: 'User not found',
+                    value: id
+                }]
+            })
 
-        res.send(id)
+        res.json({ msg: 'Ok' })
+        logger.debug(`Moderator #${jwt.id} delete user (${id})`)
     }
 }
 

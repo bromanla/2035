@@ -18,6 +18,7 @@ class TeamsController {
         const teams = await knex('teams')
             .select('teams.id', 'team_name', url_constructor('team_icon'), 'vote')
             .leftJoin('vote_audience', 'vote_audience.team_id', 'teams.id')
+            .orderBy('teams.id', 'asc')
             .offset((page - 1) * process.env.PER_PAGE)
             .limit(process.env.PER_PAGE)
             .where(builder)

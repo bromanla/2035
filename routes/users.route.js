@@ -7,8 +7,11 @@ router.get('/', usersValidator.list, usersController.list)
 router.get('/:id', usersValidator.byId, usersController.byId)
 
 // todo: refactoring
-// router.post('/', accessControl, usersValidator.create, usersController.create)
-// router.patch('/:id', accessControl, usersController.change)
+router.use(accessControl)
+
+router.post('/', usersValidator.create, usersController.create)
+router.patch('/:id', usersValidator.patch, usersController.change)
+router.delete('/:id', usersValidator.delete, usersController.delete)
 
 module.exports = {
     path: '/users',

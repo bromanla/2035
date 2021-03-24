@@ -1,48 +1,44 @@
-const  { body, query, param } = require('express-validator')
+const  { body, query } = require('express-validator')
 const Validator = require('./validator')
-const { id, page } = require('./modules/entities')
+const entities = require('./modules/entities')
 
 class UsersValidator extends Validator {
-    role = query('role')
-        .optional()
-        .custom(async role => {
-            if (!['student', 'curator', 'guest', 'moderator'].includes(role))
-                throw 'Role doesn\'t exist'
-        })
+    #id = entities.id
 
-    // Create user
-    create_username = body('username')
+    #page = entities.page
+
+    #list_role = query('role')
+        .isIn(['student', 'curator', 'guest', 'moderator']).withMessage('Role doesn\'t exist')
+
+    #username = body('username')
         .exists().withMessage('Username is required').bail()
         .isAlphanumeric('en-US').withMessage('Unacceptable symbols').bail()
         .isLength({ min: 4, max: 16 }).withMessage('Invalid length').bail()
 
-    create_password = body('password')
+    #password = body('password')
         .exists().withMessage('Password is required').bail()
         .isString().withMessage('Unacceptable symbols').bail()
         .isLength({ min: 4, max: 32 }).withMessage('Invalid length')
 
-    create_role = body('role')
+    #role = body('role')
         .exists().withMessage('Role is required').bail()
-        .custom(async role => {
-            if (!['student', 'curator', 'guest', 'moderator'].includes(role))
-                throw 'Role doesn\'t exist'
-        })
+        .isIn(['student', 'curator', 'guest', 'moderator']).withMessage('Role doesn\'t exist')
 
-    create_full_name = (field) => body(field)
+    #full_name = (field) => body(field)
         .exists().withMessage(`${field[0].toUpperCase() + field.substring(1)} is required`).bail()
         .isAlpha('ru-RU').withMessage('Unacceptable symbols').bail()
         .isLength({ max: 32 }).withMessage('Invalid length')
 
-    create_description = body('description')
+    #description = body('description')
         .optional()
         .isString().withMessage('Unacceptable symbols').bail()
         .isLength({ max: 128 }).withMessage('Invalid length')
 
-    create_archive = body('archive')
+    #archive = body('archive')
         .optional()
         .isBoolean()
 
-    create_photo_id = body('photo_id')
+    #photo_id = body('photo_id')
         .optional()
         .isNumeric({ no_symbols: true }).bail()
         .isInt({
@@ -52,24 +48,39 @@ class UsersValidator extends Validator {
 
     /* Methods */
     list = this.validate([
-       page,
-       this.role
+       this.#page,
+       this.#list_role
     ])
 
     byId = this.validate([
-        id
+        this.#id
     ])
 
     create = this.validate([
-        this.create_username,
-        this.create_password,
-        this.create_role,
-        this.create_full_name('name'),
-        this.create_full_name('surname'),
-        this.create_full_name('patronymic'),
-        this.create_description,
-        this.create_archive,
-        this.create_photo_id
+        this.#username,
+        this.#password,
+        this.#role,
+        this.#full_name('name'),
+        this.#full_name('surname'),
+        this.#full_name('patronymic'),
+        this.#description,
+        this.#archive,
+        this.#photo_id
+    ])
+
+    patch = this.validate([
+        this.#password.optional(),
+        this.#role.optional(),
+        this.#full_name('name').optional(),
+        this.#full_name('surname').optional(),
+        this.#full_name('patronymic').optional(),
+        this.#description.optional(),
+        this.#archive.optional(),
+        this.#photo_id.optional()
+    ])
+
+    delete = this.validate([
+        this.#id
     ])
 }
 

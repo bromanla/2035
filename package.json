@@ -1,6 +1,6 @@
 {
   "name": "2035",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "University project management",
   "main": "app.js",
   "author": "Roman <bromanla.json@gmail.com>",
@@ -23,7 +23,6 @@
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.19",
     "log4js": "^6.3.0",
-    "log4js-telegram-appender": "^1.0.2",
     "multer": "^1.4.2",
     "pg": "^8.5.1",
     "sharp": "^0.27.2",

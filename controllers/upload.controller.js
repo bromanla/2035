@@ -32,7 +32,11 @@ class UploadController {
         /* Uploading a photo */
         multer(req, res, async (err) => {
             if (err)
-                return res.status(400).send({error: {msg: err.message}})
+                return res.status(400).send({
+                    errors: [{
+                        msg: err.message
+                    }]
+                })
 
             const image = req.file;
 
@@ -79,7 +83,13 @@ class UploadController {
                     }
                 })
             } catch (err) {
-                res.status(400).json({error: {msg: err.message}})
+                res.status(400).json({
+                    errors: [{
+                        msg: err.message
+                    }]
+                })
+
+                logger.error(`File upload error: ${err}`)
             }
         })
     }

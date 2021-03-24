@@ -1,20 +1,24 @@
 const { query } = require('express-validator')
 const Validator = require('./validator')
-const { id, page } = require('./modules/entities')
+const entities = require('./modules/entities')
 
 class EventsValidator extends Validator {
-    completed = query('completed', 'Invalid completed')
+    #id = entities.id
+
+    #page = entities.page
+
+    #completed = query('completed', 'Invalid completed')
         .optional()
         .isBoolean()
 
     /* Methods */
     list = this.validate([
-        page,
-        this.completed
+        this.#page,
+        this.#completed
     ])
 
     byId = this.validate([
-        id
+        this.#id
     ])
 }
 

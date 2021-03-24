@@ -7,8 +7,8 @@ module.exports = rateLimit({
     max: 60,
     headers: false,
     message: {
-        error: {
+        errors: [{
             msg: 'Too many requests'
-        }
+        }]
     }
 })
