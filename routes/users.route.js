@@ -6,9 +6,7 @@ const { accessControl } = require('./modules/control.js')
 router.get('/', usersValidator.list, usersController.list)
 router.get('/:id', usersValidator.byId, usersController.byId)
 
-// todo: refactoring
 router.use(accessControl)
-
 router.post('/', usersValidator.create, usersController.create)
 router.patch('/:id', usersValidator.patch, usersController.change)
 router.delete('/:id', usersValidator.delete, usersController.delete)

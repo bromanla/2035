@@ -77,6 +77,11 @@ class UsersController {
                 }]
             })
 
+        user.teams = await knex('teams_members')
+            .select('teams.id', 'team_name', 'team_role', 'archive', url_constructor('team_icon'))
+            .leftJoin('teams', 'teams.id', 'team_id')
+            .where({ user_id: id })
+
         res.json(user)
     }
 
@@ -178,7 +183,8 @@ class UsersController {
     }
 
     delete = async (req, res) => {
-        const { id } = req.params;
+        const { id } = req.params
+        const { jwt } = req
 
         const count = await knex('users')
             .del()
