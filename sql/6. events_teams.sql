@@ -5,5 +5,3 @@ create table events_teams (
 );
 
 -- insert into events_teams (event_id, team_id) values ('1', '12');
--- insert into events_teams (event_id, team_id) values ('1', '16');
--- insert into events_teams (event_id, team_id) values ('1', '18');
